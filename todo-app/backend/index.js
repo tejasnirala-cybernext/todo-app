@@ -9,7 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(
   cors({
-    origin: "localhost:5173",
+    origin: "http://localhost:5173",
   })
 );
 
@@ -45,7 +45,7 @@ app.post("/todo", async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: `Todo created with _id: ${createResponse._id}`,
+      message: createResponse,
     });
   } catch (error) {
     res.status(500).json({
@@ -81,7 +81,21 @@ app.patch("/completed", async (req, res) => {
       });
     }
 
-    await Todo.updateOne({ _id: updatedPayload.id }, { completed: true });
+    const findTodo = await Todo.find({
+      _id: updatedPayload.id
+    });
+
+    if(!findTodo.length){
+      res.status(200).json({
+        success: false,
+        message: 'id not found'
+      });
+    }
+
+    const completedStatus = findTodo[0].completed
+    const updatedCompletedStatus = !completedStatus
+
+    await Todo.updateOne({ _id: updatedPayload.id }, { completed: updatedCompletedStatus });
 
     res.status(200).json({
       success: true,
